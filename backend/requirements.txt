@@ -1,0 +1,7 @@
+fastapi==0.141.1
+uvicorn==0.54.0
+httptools==0.8.0
+httpx==0.28.1
+pillow==12.3.0
+pillow-heif==1.8.0
+PyYAML==6.0.3

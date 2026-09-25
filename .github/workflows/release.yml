@@ -1,0 +1,74 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*.*.*"]
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check tag matches VERSION file
+        run: |
+          test "v$(cat VERSION)" = "${GITHUB_REF_NAME}" || { echo "Tag ${GITHUB_REF_NAME} != VERSION $(cat VERSION)"; exit 1; }
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Run tests
+        run: |
+          pip install -r backend/requirements-dev.txt
+          cd backend && python -m pytest -q
+
+      - uses: docker/setup-qemu-action@v3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/photosorter2claude
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: VERSION=${{ github.ref_name }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Release notes from CHANGELOG
+        run: |
+          v="$(cat VERSION)"
+          awk -v v="$v" '$0 ~ "^## \\[?"v"\\]?" {p=1; next} /^## / && p {exit} p' CHANGELOG.md > notes.md
+          {
+            echo ""
+            echo "### Deploy"
+            echo "Image: \`ghcr.io/${{ github.repository_owner }}/photosorter2claude:${v}\`"
+            echo "Use the attached \`docker-compose.yaml\` (set \`PHOTOSORTER_TAG=${v}\` to pin this version)."
+          } >> notes.md
+          cat notes.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: PhotoSorter2Claude ${{ github.ref_name }}
+          body_path: notes.md
+          files: |
+            docker-compose.yaml
+            .env.example
+            config/config.example.yaml
+            docs/PhotoSorter2Claude-Documentation.pdf

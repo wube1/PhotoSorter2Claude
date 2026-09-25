@@ -1,0 +1,55 @@
+# PhotoSorter2Claude – ready to paste into Portainer (Stacks → Add stack → Web editor)
+# or deploy as a Git repository stack from your Gitea mirror.
+#
+# Before the first start create the app folders on the host, owned by 1000:1000:
+#   mkdir -p /mnt/Legend/containers/persistent_storage/photosorter2claude/{config,data,logs}
+#   chown -R 1000:1000 /mnt/Legend/containers/persistent_storage/photosorter2claude
+# and put your config.yaml into .../photosorter2claude/config/ (see config/config.example.yaml).
+# The inbox and sorted folders must be writable by uid/gid 1000.
+#
+# Every ${VARIABLE:-default} can be overridden in Portainer's "Environment variables"
+# section or in a .env file next to this file (see .env.example).
+
+services:
+  photosorter2claude:
+    image: ghcr.io/wube1/photosorter2claude:${PHOTOSORTER_TAG:-latest}
+    # Alternative: build from source (e.g. Portainer "Repository" stack on the Gitea mirror)
+    # build:
+    #   context: .
+    container_name: photosorter2claude
+    user: "1000:1000"
+    restart: unless-stopped
+    ports:
+      - "${PHOTOSORTER_PORT:-8420}:8080"
+    environment:
+      TZ: ${TZ:-Europe/Warsaw}
+      PHOTOSORTER_AUTH_USER: ${PHOTOSORTER_AUTH_USER:-}
+      PHOTOSORTER_AUTH_PASSWORD: ${PHOTOSORTER_AUTH_PASSWORD:-}
+      PHOTOSORTER_ALLOWED_HOSTS: ${PHOTOSORTER_ALLOWED_HOSTS:-}
+      PHOTOSORTER_CONTACT_EMAIL: ${PHOTOSORTER_CONTACT_EMAIL:-}
+      PHOTOSORTER_LOG_LEVEL: ${PHOTOSORTER_LOG_LEVEL:-INFO}
+    volumes:
+      - ${PHOTOS_INBOX:-/mnt/Data/pictures/!sort}:/photos/inbox
+      - ${PHOTOS_SORTED:-/mnt/Data/pictures/!sorted}:/photos/sorted
+      - ${APPDATA:-/mnt/Legend/containers/persistent_storage/photosorter2claude}/config:/config:ro
+      - ${APPDATA:-/mnt/Legend/containers/persistent_storage/photosorter2claude}/data:/data
+      - ${APPDATA:-/mnt/Legend/containers/persistent_storage/photosorter2claude}/logs:/logs
+    mem_limit: 1g
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - CommonContainerNetwork
+
+networks:
+  CommonContainerNetwork:
+    external: true

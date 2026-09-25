@@ -1,0 +1,76 @@
+# PhotoSorter2Claude configuration
+# Copy to <APPDATA>/config/config.yaml on the NAS (mounted read-only at /config).
+# Everything is optional: anything you leave out uses the built-in default shown here.
+# Restart the container after editing.
+
+naming:
+  # {date} format (Python strftime). 23.06.2025 = "%d.%m.%Y"
+  date_format: "%d.%m.%Y"
+  # Folder templates. Fields: {date} {year} {month} {day} {city} {place}
+  location_template: "{date} - {city} - {place}"   # GPS + a specific place was found
+  city_only_template: "{date} - {city}"            # GPS, but only the town/village is known
+  documents_template: "{date} - documents"         # photos of paper documents
+  no_location_template: "{date}"                   # no GPS and no nearby session
+  # Use the street / promenade / square name when no named place is nearby
+  # (e.g. "Bulwar Czerwieński", "Opolska")
+  street_fallback: true
+  # Rename names coming from OpenStreetMap ("OSM name": "your name")
+  aliases:
+    "Park im. dr. Henryka Jordana": "Park Jordana"
+
+# Custom places always win over OpenStreetMap. The smallest matching radius wins.
+# folder may use {date}; a plain name ("home") puts all those photos in one folder.
+places:
+  - name: Example place
+    lat: 50.061430
+    lon: 19.936580
+    radius_m: 100
+    folder: "{date} - Kraków - Rynek"
+  # - name: Home
+  #   lat: 00.000000
+  #   lon: 00.000000
+  #   radius_m: 50
+  #   folder: "home"
+
+grouping:
+  # Photos taken within max_gap_minutes of each other and within radius_m of the
+  # first photo of the session all get the first photo's folder.
+  enabled: true
+  max_gap_minutes: 90
+  radius_m: 250
+  # Photos without GPS (e.g. a camera) taken during a located session get its folder
+  # proposed with status "Needs review".
+  attach_no_gps_by_time: true
+
+geocoding:
+  enabled: true
+  language: pl                      # names in Polish: Kraków, not Krakow
+  nominatim_url: https://nominatim.openstreetmap.org
+  overpass_url: https://overpass-api.de/api/interpreter   # "" disables point-of-interest search
+  poi_radius_m: 45                  # a restaurant/pub/museum this close becomes the {place}
+  min_interval_s: 1.1               # public servers allow 1 request/second
+  poi_keys: [amenity, tourism, leisure, historic]   # add "shop" to also name shops
+  area_keys: [leisure, tourism, amenity, historic]
+
+documents:
+  enabled: true
+  min_score: 0.6                    # 0..1, higher = stricter
+  status: review                    # "review" (you confirm) or "ready"
+
+scan:
+  workers: 2                        # parallel analysis threads (memory ~100 MB each at peak)
+  min_file_age_s: 5                 # skip files that are still being copied
+  extensions: [.jpg, .jpeg, .png, .heic, .heif, .webp, .tif, .tiff]
+
+# "permanent" or "trash" (moves deleted photos to <inbox>/.photosorter-trash)
+delete_mode: permanent
+
+# true: GPS photos where only the town is known need review
+ready_requires_place: false
+
+# Choices in the "Predefined folder" dropdown ({date} = each photo's date)
+predefined_folders:
+  - "home"
+  - "{date} - documents"
+  - "{date} - Kraków"
+  - "{date} - screenshots"
