@@ -31,7 +31,8 @@ Volumes: inbox `/mnt/Data/pictures/!sort` → `/photos/inbox`, output `/mnt/Data
 - Sandbox has no Docker daemon and no access to OSM servers: test with the fake geocoder / a local mock.
 
 ## Release process
-Bump `VERSION` + `frontend/package.json` version, CHANGELOG, rebuild PDF, commit, tag `vX.Y.Z`, push tag
+Bump `VERSION` + `frontend/package.json` version, CHANGELOG, rebuild PDF, commit, push to `main`
+(the session git proxy refuses tag pushes; the workflow creates tag `vX.Y.Z` itself when it is missing)
 → `.github/workflows/release.yml` publishes `ghcr.io/wube1/photosorter2claude` and a GitHub Release.
 
 ## Status / ideas for later

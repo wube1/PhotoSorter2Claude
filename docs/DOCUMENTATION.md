@@ -322,7 +322,8 @@ Logs: `…/photosorter2claude/logs/photosorter.log` (or Portainer → container 
 
 * Versions follow **Semantic Versioning** (`MAJOR.MINOR.PATCH`); the single source of truth is the
   `VERSION` file; changes are listed in `CHANGELOG.md`.
-* Pushing a tag `vX.Y.Z` runs the release workflow: tests → multi-arch image
+* Pushing `main` with a new version in `VERSION` (or pushing a tag `vX.Y.Z`) runs the release
+  workflow: it creates the `vX.Y.Z` tag, runs tests → multi-arch image
   (`linux/amd64`, `linux/arm64`) pushed to `ghcr.io/wube1/photosorter2claude` with tags `X.Y.Z`,
   `X.Y` and `latest` → a GitHub Release with the compose file, `.env.example`,
   `config.example.yaml` and this PDF attached.

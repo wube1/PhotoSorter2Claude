@@ -48,7 +48,8 @@ Resources: ~70 MB RAM idle, ~260 MB peak while scanning 12 MP photos; the 1 GB c
 
 Images: `ghcr.io/wube1/photosorter2claude:<version>` (`latest`, `X.Y`, `X.Y.Z`; `edge` = main).
 To release: bump [`VERSION`](VERSION), add a [`CHANGELOG`](CHANGELOG.md) entry, rebuild the PDF
-(`python scripts/build_docs.py`), commit, then tag `vX.Y.Z` and push the tag.
+(`python scripts/build_docs.py`) and merge to `main` – the release workflow creates the `vX.Y.Z`
+tag, image and GitHub Release automatically (pushing a `vX.Y.Z` tag yourself works too).
 
 ## Development
 
